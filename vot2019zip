@@ -1,0 +1,54 @@
+import zipfile
+import os
+class FileInfo():
+
+#处理VOT2019数据集，将其中的压缩包解压到相应目录
+
+    def __init__(self, file_dir):
+        self.__file_dir = file_dir
+
+    @property
+    def file_dir(self):
+        return self.__file_dir
+
+    def un_zip(self, filepath):
+        """
+        将filepath解压到指定路径中
+        :param filepath:
+        :return:
+        """
+        zip_file = zipfile.ZipFile(filepath)
+        index_num = filepath.rindex('/')
+        path = filepath[0:index_num:1]
+        print(path)
+        try:
+            zip_file.extractall(path)  #解压文件到路径path
+        except:
+            print(filepath + '解压失败')
+            pass
+        print(filepath + '解压完成')
+        os.remove(filepath) #删除解压的源文件
+        zip_file.close()
+
+    def get_all_filespath(self, dir):
+        '''
+        返回dir下多级目录下文件的完整路径
+        :param dir:
+        :return:
+        '''
+        filesname = []  #存放文件的完整路径
+        list = os.listdir(dir)  #获取dir目录下的所有目录文件名
+        for i in range(0, len(list)):
+            path = os.path.join(dir, list[i])   #连接路径+目录文件名
+            if os.path.isdir(path): #递归获取文件完整的路径
+                filesname.extend(self.get_all_filespath(path))
+            if os.path.isfile(path) and (path.find('.zip')>-1): #将.zip压缩包的完整路径保存在filesname中
+                filesname.append(path)
+        return filesname
+
+file_dir = r'/home/jq/Desktop/VOT2019'
+file_info = FileInfo(file_dir)
+
+filesname = file_info.get_all_filespath(file_dir)   #获取压缩包文件的绝对路径
+for filename in filesname:
+    file_info.un_zip(filename)  #解压每个压缩包
